@@ -10,10 +10,10 @@ from pydantic import BaseModel
 logging.basicConfig(level=logging.INFO)
 
 # 1. Setup the AI
-genai.configure(api_key="AIzaSyBAYXmsKMFO3DmZhvnjHKTznrIHeag2eNE")
+genai.configure(api_key="YOUR GEMINI API KEY")
 
 # Use 2.0-flash for the best 2026 performance
-MODEL_NAME = 'gemini-2.5-pro'
+MODEL_NAME = 'gemini-2.5-flash'
 model = genai.GenerativeModel(MODEL_NAME)
 
 app = FastAPI()

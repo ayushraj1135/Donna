@@ -1,176 +1,77 @@
-# Donna 🤖
+# 👩‍💼 Donna: Persona-Driven AI Secretary
 
-Donna is a **WhatsApp-based AI personal task scheduler** inspired by *Donna Paulsen* from the TV show *Suits*.
-
-Instead of using an app, users can simply **message Donna on WhatsApp**, and she will understand, organize, and schedule their tasks intelligently.
+**Donna** is a sophisticated personal assistant backend built with **FastAPI** and **Google Gemini 2.0 Flash**. Unlike standard chatbots, Donna is designed with a specific personality—a loyal secretary and a close friend—capable of managing tasks, recognizing user intent, and maintaining a persistent "Notebook" of your activities.
 
 ---
 
-## 🚀 Features (Current)
+## 🌟 Core Capabilities
 
-* 📩 WhatsApp chatbot integration
-* 🔗 Webhook-based backend using Spring Boot
-* 🧠 Basic AI intent detection (FastAPI)
-* 🌐 Public endpoint using ngrok
-* 💬 Real-time message handling
-
----
-
-## 🛠️ Tech Stack
-
-### Backend
-
-* Java (Spring Boot)
-
-### AI Service
-
-* Python (FastAPI)
-
-### Messaging
-
-* Twilio WhatsApp Sandbox
-
-### Development Tools
-
-* ngrok (for public URL tunneling)
+* **Intent Classification**: Dynamically categorizes incoming text into `CHAT`, `LOG_TASK`, `CONTACT_THIRD_PARTY`, or `CLEAR_MEMORY`.
+* **Persistent Notebook**: Features a local JSON-based memory system (`donna_memory.json`) that allows Donna to remember and recall your tasks across sessions.
+* **Temporal Intelligence**: Injects real-time date and time metadata so Donna is always aware of the current context (e.g., race results, deadlines, and current year events).
+* **Witty Persona**: Optimized system prompting ensures Donna communicates with a helpful, organized, and friendly tone.
 
 ---
 
-## 🧠 How It Works
+## 🛠️ Technical Architecture
 
-1. User sends a message on WhatsApp
-2. Twilio forwards the message to the backend
-3. Spring Boot processes the request
-4. Message is sent to FastAPI for parsing
-5. AI extracts intent (e.g., create/delete task)
-6. Donna responds back on WhatsApp
+* **Runtime**: Python 3.10+
+* **API Framework**: FastAPI (Asynchronous)
+* **AI Engine**: Google Generative AI (Gemini 2.0 Flash)
+* **Web Server**: Uvicorn
+* **Data Persistence**: Flat-file JSON Storage
 
 ---
 
-## 📦 Project Structure
+## 🚀 Getting Started
 
+### 1. Installation
+Clone the repository and install the required Python packages:
+```bash
+git clone [https://github.com/your-username/donna-ai-secretary.git](https://github.com/your-username/donna-ai-secretary.git)
+cd donna-ai-secretary
+pip install fastapi uvicorn google-generativeai pydantic
 ```
-donna/
-│
-├── backend/        # Spring Boot application
-├── donna-ai/       # FastAPI AI service
-└── README.md
-```
+### 2. Configuration
+Ensure you have a valid Google AI Studio API Key. Replace the placeholder in main.py:
+Python
+````
+genai.configure(api_key="YOUR_GEMINI_API_KEY")
+````
 
----
+### 3. Launching the Backend
 
-## ⚙️ Setup Instructions
+Run the server using Uvicorn:
+````
+python main.py
+````
+The API will be available at `http://127.0.0.1:8000`.
 
-### 1. Clone the Repository
+## 📡 API Usage
+`POST /analyze`
 
-```
-git clone https://github.com/YOUR_USERNAME/donna-ai.git
-cd donna-ai
-```
+Processes user messages and returns structured JSON instructions.
 
----
+### Request Body (JSON):
+````
+{
+"text": "Donna, remind me to check the Japanese GP standings tonight."
+}
+````
+### Successful Response:
 
-### 2. Run Backend (Spring Boot)
+````
+{
+"intent": "LOG_TASK",
+"recipient": null,
+"details": "Check Japanese GP standings tonight",
+"response_to_user": "I've got you! I've added that to your list. ✅ Logged in my notebook!"
+}
+````
 
-* Open in IntelliJ
-* Run `DonnaBackendApplication.java`
-* Runs on:
+## 🧠 Memory Logic
 
-```
-http://localhost:8080
-```
+Donna maintains a sliding window of memory. Every request includes the last 5 entries from donna_memory.json, enabling her to answer questions like:
 
----
+    "Donna, what did I tell you to remind me about earlier?"
 
-### 3. Run AI Service (FastAPI)
-
-```
-cd donna-ai
-python -m uvicorn main:app --reload
-```
-
-* Runs on:
-
-```
-http://localhost:8000
-```
-
----
-
-### 4. Expose Backend (ngrok)
-
-```
-ngrok http 8080
-```
-
-* Copy HTTPS URL and add `/webhook`
-
----
-
-### 5. Configure Twilio Sandbox
-
-* Paste ngrok URL in:
-
-    * **WHEN A MESSAGE COMES IN**
-* Method: POST
-
----
-
-### 6. Test
-
-Send a WhatsApp message:
-
-```
-Hello Donna
-```
-
----
-
-## 🔥 Future Plans
-
-* 📅 Smart task scheduling algorithm
-* 🗄️ Database integration (PostgreSQL)
-* ⏱️ Priority-based scheduling
-* 🔄 Dynamic rescheduling ("do this now")
-* 📆 Google Calendar integration
-* 🧠 Advanced NLP (spaCy / transformers)
-
----
-
-## 💡 Vision
-
-Donna is not just a chatbot.
-
-The goal is to build a **proactive personal assistant** that:
-
-* Understands your tasks
-* Plans your time intelligently
-* Feels like a real human assistant
-
----
-
-## 👨‍💻 Author
-
-**Ayush Raj**
-Computer Science Student | Music Producer | Builder
-
----
-
-## ⭐ Contribute
-
-This is an evolving project. Contributions, ideas, and feedback are welcome!
-
----
-
-## ⚠️ Note
-
-This project is currently in development and uses **Twilio WhatsApp Sandbox** for testing purposes.
-
----
-
-## 🔥 Inspired By
-
-* *Suits* — Donna Paulsen
-* AI productivity tools like Motion & Reclaim
-
----
