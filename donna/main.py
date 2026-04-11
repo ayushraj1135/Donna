@@ -10,7 +10,7 @@ from pydantic import BaseModel
 logging.basicConfig(level=logging.INFO)
 
 # 1. Setup the AI
-genai.configure(api_key="YOUR GEMINI API KEY")
+genai.configure(api_key="AIzaSyBAYXmsKMFO3DmZhvnjHKTznrIHeag2eNE")
 
 # Use 2.0-flash for the best 2026 performance
 MODEL_NAME = 'gemini-2.5-flash'
