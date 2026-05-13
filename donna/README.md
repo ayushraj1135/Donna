@@ -1,77 +1,77 @@
-# 👩‍💼 Donna: Persona-Driven AI Secretary
+# Donna: Your AI-Driven Personal Secretary
 
-**Donna** is a sophisticated personal assistant backend built with **FastAPI** and **Google Gemini 2.0 Flash**. Unlike standard chatbots, Donna is designed with a specific personality—a loyal secretary and a close friend—capable of managing tasks, recognizing user intent, and maintaining a persistent "Notebook" of your activities.
+**Donna** is a professional-grade virtual assistant project designed to act as a highly organized personal secretary. Built with a dual-service architecture, Donna bridges a **Java Spring Boot** gateway with a **Python FastAPI** intelligence core powered by **Google’s Gemini 2.0 Flash**.
 
----
-
-## 🌟 Core Capabilities
-
-* **Intent Classification**: Dynamically categorizes incoming text into `CHAT`, `LOG_TASK`, `CONTACT_THIRD_PARTY`, or `CLEAR_MEMORY`.
-* **Persistent Notebook**: Features a local JSON-based memory system (`donna_memory.json`) that allows Donna to remember and recall your tasks across sessions.
-* **Temporal Intelligence**: Injects real-time date and time metadata so Donna is always aware of the current context (e.g., race results, deadlines, and current year events).
-* **Witty Persona**: Optimized system prompting ensures Donna communicates with a helpful, organized, and friendly tone.
+Unlike basic chatbots, Donna is designed to manage your schedule, log tasks, coordinate with third parties, and utilize a persistent **PostgreSQL** database for long-term memory.
 
 ---
 
-## 🛠️ Technical Architecture
+## 🚀 Core Features
 
-* **Runtime**: Python 3.10+
-* **API Framework**: FastAPI (Asynchronous)
-* **AI Engine**: Google Generative AI (Gemini 2.0 Flash)
-* **Web Server**: Uvicorn
-* **Data Persistence**: Flat-file JSON Storage
+*   **Intelligent Scheduling**: Uses Gemini 2.0 Flash to categorize user intent and manage complex scheduling logic.
+*   **Secretary Persona**: Donna maintains a professional, organized, and witty personality, focusing strictly on productivity and coordination.
+*   **Persistent Database Memory**: Utilizes a PostgreSQL backend to store historical logs, ensuring Donna remembers past context and user preferences.
+*   **Third-Party Coordination**: Capable of drafting messages and managing communications with other people on your behalf.
+*   **Conflict Resolution**: (Planned) Logic to prioritize urgent tasks and automatically suggest rescheduling for lower-priority events.
 
 ---
 
-## 🚀 Getting Started
+## 🛠️ Tech Stack
 
-### 1. Installation
-Clone the repository and install the required Python packages:
-```bash
-git clone [https://github.com/your-username/donna-ai-secretary.git](https://github.com/your-username/donna-ai-secretary.git)
-cd donna-ai-secretary
-pip install fastapi uvicorn google-generativeai pydantic
+### **Gateway (Java)**
+*   **Framework**: Spring Boot
+*   **Responsibility**: Acts as the Webhook controller for Twilio, receiving WhatsApp messages and routing them to the Python brain.
+
+### **Brain (Python)**
+*   **Framework**: FastAPI
+*   **AI Model**: Google Gemini 2.0 Flash
+*   **Database**: PostgreSQL (via `psycopg2`)
+*   **Responsibility**: Intent analysis, context retrieval, and executing secretary-specific logic.
+
+---
+
+## 📂 Project Structure
+
+```text
+Donna/
+├── java-backend/
+│   └── WebhookController.java  # Spring Boot REST Controller
+├── python-brain/
+│   ├── main.py                 # FastAPI & Gemini Logic
+│   └── test_db.py              # Database Connection Utility
+├── schema.sql                  # PostgreSQL Table Definitions
+└── README.md
 ```
-### 2. Configuration
-Ensure you have a valid Google AI Studio API Key. Replace the placeholder in main.py:
-Python
-````
-genai.configure(api_key="YOUR_GEMINI_API_KEY")
-````
 
-### 3. Launching the Backend
+⚙️ Setup & Installation
+1. Database Setup
 
-Run the server using Uvicorn:
+Ensure PostgreSQL is installed and running. Run the following to initialize Donna's memory:
+SQL
 ````
-python main.py
-````
-The API will be available at `http://127.0.0.1:8000`.
+CREATE DATABASE donna_db;
 
-## 📡 API Usage
-`POST /analyze`
-
-Processes user messages and returns structured JSON instructions.
-
-### Request Body (JSON):
-````
-{
-"text": "Donna, remind me to check the Japanese GP standings tonight."
-}
-````
-### Successful Response:
-
-````
-{
-"intent": "LOG_TASK",
-"recipient": null,
-"details": "Check Japanese GP standings tonight",
-"response_to_user": "I've got you! I've added that to your list. ✅ Logged in my notebook!"
-}
+CREATE TABLE tasks (
+    id SERIAL PRIMARY KEY,
+    intent VARCHAR(50),
+    details TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ````
 
-## 🧠 Memory Logic
+2. Python Brain Configuration
 
-Donna maintains a sliding window of memory. Every request includes the last 5 entries from donna_memory.json, enabling her to answer questions like:
+   1. Install necessary libraries:
+````
+pip install fastapi uvicorn psycopg2-binary google-generativeai
+````
+    ii. Set your Gemini API Key and PostgreSQL credentials in `main.py`.
 
-    "Donna, what did I tell you to remind me about earlier?"
+    iii. Start the server:
+    uvicorn main:app --reload --port 8000
 
+3. Java Gateway Configuration
+
+Ensure the pythonUrl in WebhookController.java points to your running FastAPI instance.
+
+Run the Spring Boot application.

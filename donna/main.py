@@ -3,23 +3,20 @@ import json
 import logging
 from datetime import datetime
 import google.generativeai as genai
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
 
 # 1. Setup the AI
-genai.configure(api_key="")
+genai.configure(api_key="AIzaSyALWH-UWHpv1xv-NrRQgOEsTGK1RiADTTs")
 
-# Use 2.0-flash for the best 2026 performance
-MODEL_NAME = 'gemini-2.5-flash'
+# Use gemini-2.0-flash (2.5 does not exist yet)
+MODEL_NAME = 'gemini-2.0-flash'
 model = genai.GenerativeModel(MODEL_NAME)
 
 app = FastAPI()
-
-class Message(BaseModel):
-    text: str
 
 # --- THE NOTEBOOK (Memory Functions) ---
 MEMORY_FILE = "donna_memory.json"
@@ -31,49 +28,63 @@ def save_to_notebook(intent, details):
         "intent": intent,
         "details": details
     }
-    # Append mode for the memory file
     with open(MEMORY_FILE, "a") as f:
         f.write(json.dumps(entry) + "\n")
 
 def read_notebook():
     """Reads the last few entries to give Donna context."""
     if not os.path.exists(MEMORY_FILE):
-        return "Your notebook is currently empty."
+        return "The notebook is currently empty. No tasks scheduled."
 
     with open(MEMORY_FILE, "r") as f:
         lines = f.readlines()
-        # Get the last 5 things logged
         last_entries = [json.loads(line) for line in lines[-5:]]
         return json.dumps(last_entries)
 
-@app.post("/analyze")
-async def analyze(message: Message):
-    current_time = datetime.now().strftime("%I:%M %p, %A, %B %d, %Y")
+@app.post("/bot/receive")
+async def analyze(request: Request):
+    # Flexible JSON handling to prevent 422 errors
+    try:
+        data = await request.json()
+        logging.info(f"Incoming Request Body: {data}")
+    except Exception:
+        return {"error": "Invalid JSON format"}
 
-    # Donna looks at her notebook before answering
+    # Extract text from common keys (text, body, or message)
+    user_text = data.get("text") or data.get("body") or data.get("message")
+
+    if not user_text:
+        logging.error("No text field found in incoming JSON")
+        return {"intent": "CHAT", "response_to_user": "I received your message, but I couldn't read the text!"}
+
+    current_time = datetime.now().strftime("%I:%M %p, %A, %B %d, %Y")
     past_context = read_notebook()
 
+    # STRICT SECRETARY PERSONA PROMPT
     prompt = f"""
-    You are Donna, a loyal secretary and a close friend. 
+    ROLE: You are Donna, a professional, highly organized Personal Secretary.
+    Your SOLE responsibility is managing the user's schedule, logging tasks, and coordinating with third parties.
+    
     Current Time: {current_time}
-    
     Your Notebook (Last 5 logs): {past_context}
+    User Message: "{user_text}"
     
-    User Message: "{message.text}"
-    
-    PERSONALITY: Witty, helpful, organized. Talk like a friend.
-    
+    STRICT BOUNDARIES:
+    - You are a loyal secretary. If the user asks for trivia, jokes, or non-scheduling advice, politely redirect them to their tasks.
+    - If a task involves someone else (e.g., "Tell Mom...", "Email the boss..."), use intent: CONTACT_THIRD_PARTY.
+    - If user asks to clear everything, use intent: CLEAR_MEMORY.
+    - You are witty and friendly, but always professional.
+
     TASK:
-    1. CATEGORIZE: CHAT, LOG_TASK, or CONTACT_THIRD_PARTY.
-    2. RESPOND: If it's a LOG_TASK, confirm you've written it down. 
-       If the user asks "What's on my list?", use the Notebook context above to answer.
+    1. CATEGORIZE: CHAT (only if schedule-related), LOG_TASK, CONTACT_THIRD_PARTY, or CLEAR_MEMORY.
+    2. RESPOND: Confirm actions clearly. If retrieving from the Notebook, be precise.
 
     Return ONLY JSON:
     {{
       "intent": "THE_INTENT",
       "recipient": "Name or null",
       "details": "Summary of action",
-      "response_to_user": "Your witty response"
+      "response_to_user": "Your witty, professional response"
     }}
     """
 
@@ -82,22 +93,29 @@ async def analyze(message: Message):
         raw_text = response.text.strip().replace("```json", "").replace("```", "").strip()
         result = json.loads(raw_text)
 
-        # --- EXECUTE THE NOTEBOOK LOGGING ---
-        if result.get("intent") == "LOG_TASK":
+        # --- EXECUTE SECRETARY LOGIC ---
+        if result.get("intent") == "CLEAR_MEMORY":
+            if os.path.exists(MEMORY_FILE):
+                os.remove(MEMORY_FILE)
+            result["response_to_user"] = "Notebook cleared, boss. I'm ready for a fresh start! 🧹"
+
+        elif result.get("intent") == "LOG_TASK":
             save_to_notebook("LOG_TASK", result.get("details"))
-            # Add a small visual cue to the response
-            result["response_to_user"] += " ✅ Logged in my notebook!"
+            result["response_to_user"] += " ✅ Logged."
+
+        elif result.get("intent") == "CONTACT_THIRD_PARTY":
+            result["response_to_user"] += " 📤 I'll get that message sent out immediately."
 
         print(f"Success! Intent: {result.get('intent')}")
         return result
 
     except Exception as e:
-        print(f"CRITICAL ERROR: {str(e)}")
+        logging.error(f"AI/JSON ERROR: {str(e)}")
         return {
             "intent": "CHAT",
-            "response_to_user": f"Donna's brain is buffering. (Error: {str(e)[:40]})"
+            "response_to_user": "My systems are a bit crossed. Could you say that again?"
         }
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

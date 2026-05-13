@@ -17,7 +17,7 @@ public class WebhookController {
         try {
             // 1. Send the WhatsApp text to your Python "Brain"
             // Use 127.0.0.1 to be more specific than 'localhost'
-            String pythonUrl = "http://127.0.0.1:8000/analyze";
+            String pythonUrl = "http://127.0.0.1:8000/bot/receive";;
 
             // 2. Prepare the request as a Map
             Map<String, String> request = new HashMap<>();
